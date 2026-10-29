@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズプレイヤー画面</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+
+    <div id="dramatic-overlay" class="dramatic-overlay hidden">
+        <div class="dramatic-content">
+            <div id="dramatic-num" class="dramatic-num">第 1 問</div>
+            <div id="dramatic-type" class="dramatic-type">【4択方式】</div>
+        </div>
+    </div>
+
+    <div class="card setup-card" id="setup-screen">
+        <h2>クイズに参加</h2>
+        <div class="input-group">
+            <input type="text" id="player-name" placeholder="お名前を入力">
+            <button class="btn btn-primary" id="join-btn">参加する</button>
+        </div>
+    </div>
+
+    <div class="card hidden" id="game-screen" style="max-width: 500px; margin: 0 auto;">
+        <div class="player-status-bar">
+            <div class="player-name-badge" id="display-name">ゲスト</div>
+            <div class="score-info">
+                <span>スコア: <strong id="display-score">0</strong> pt</span>
+                <span>連勝: <strong id="display-combo">0</strong></span>
+            </div>
+        </div>
+
+        <div id="buzz-status-msg" style="color: #d32f2f; font-weight: bold; margin-bottom: 8px;"></div>
+
+        <div class="q-full-text question-display-box" id="question-box">待機中...</div>
+
+        <div class="timer-container hidden" id="timer-box">
+            <div class="timer-bar-wrapper">
+                <div class="timer-bar" id="timer-bar"></div>
+            </div>
+            <div class="timer-text" id="timer-count">0.0</div>
+        </div>
+
+        <div style="margin: 15px 0;">
+            <button class="buzz-button" id="buzz-btn" disabled>
+                <span class="buzz-btn-text">PUSH</span>
+                <span class="buzz-sub-text">早押し [Space]</span>
+            </button>
+        </div>
+
+        <div class="answer-section hidden" id="answer-ui">
+            <div class="choice-grid hidden" id="ui-choice"></div>
+
+            <div class="mhy-container hidden" id="ui-mhy">
+                <div class="mhy-display">
+                    入力: <span class="mhy-text" id="mhy-entered"></span>
+                </div>
+                <div class="choice-grid" id="mhy-choice-grid"></div>
+            </div>
+
+            <div class="hidden" id="ui-text">
+                <div class="input-group">
+                    <input type="text" id="text-answer-input" placeholder="解答を入力 (Enterで送信)">
+                    <button class="btn btn-success" id="text-submit-btn">送信</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-box hidden" id="result-message"></div>
+        
+        <div class="q-answers-box hidden margin-top" id="correct-answer-box" style="text-align: center;"></div>
+    </div>
+
+    <div class="card hidden" id="result-screen" style="max-width: 500px; margin: 40px auto; text-align: center;">
+        <h1>🏆 最終結果 🏆</h1>
+        <div class="result-box result-correct margin-top" id="my-final-result">あなたの順位: -位 (- pt)</div>
+        <h3 class="margin-top">全体ランキング</h3>
+        <table class="score-table margin-top">
+            <thead>
+                <tr>
+                    <th>順位</th>
+                    <th>名前</th>
+                    <th>スコア</th>
+                </tr>
+            </thead>
+            <tbody id="ranking-list"></tbody>
+        </table>
+    </div>
+
+    <script src="/static/player.js"></script>
+</body>
+</html>

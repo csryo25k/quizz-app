@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズホスト画面</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="card" id="main-screen" style="max-width: 900px; margin: 0 auto;">
+        <div class="host-header">
+            <h2>クイズ ホスト画面</h2>
+        </div>
+        
+        <div class="panel-header" style="justify-content: center; flex-wrap: wrap;">
+            <select id="difficulty-select" class="btn" style="background: #fff; color: #333; border: 1px solid #ccc;">
+                <option value="all">全選択</option>
+                <option value="easy">簡単</option>
+                <option value="normal-">普通-</option>
+                <option value="normal">普通</option>
+                <option value="normal+">普通＋</option>
+                <option value="difficult">難しい</option>
+            </select>
+            <button class="btn btn-success btn-large" id="next-q-btn">出題スタート / 次の問題</button>
+            <button class="btn btn-warning" id="reset-q-btn">出題履歴リセット</button>
+            <button class="btn btn-danger" id="finish-q-btn">この問題をラスト問にして終了</button>
+        </div>
+
+        <div class="status-box margin-top">
+            <div class="badge badge-type" id="q-type-badge">[ 待機中 ]</div>
+            <div class="q-full-text margin-top" id="q-text">（配信スタートを押すと出題を開始します）</div>
+            
+            <div class="q-answers-box hidden" id="q-answers-container">
+                💡 模範解答: <span id="q-answers-text" style="font-weight: bold;">-</span>
+            </div>
+
+            <div class="status-text" id="q-status">状態: 待機中</div>
+            <div class="buzz-log" id="buzz-info" style="color: #d32f2f; font-weight: bold; margin-top: 10px;"></div>
+        </div>
+
+        <h3 class="margin-top">参加プレイヤー一覧</h3>
+        <div id="player-list-container">
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th>順位</th>
+                        <th>名前</th>
+                        <th>スコア</th>
+                        <th>コンボ</th>
+                        <th>接続</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="player-list-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card hidden" id="result-screen" style="max-width: 600px; margin: 40px auto; text-align: center;">
+        <h1>🏆 最終結果 🏆</h1>
+        <table class="score-table margin-top">
+            <thead>
+                <tr>
+                    <th>順位</th>
+                    <th>プレイヤー名</th>
+                    <th>スコア</th>
+                </tr>
+            </thead>
+            <tbody id="result-list"></tbody>
+        </table>
+    </div>
+
+    <script src="/static/host.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズ メインモニター画面</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body style="background: #121212; color: #ffffff; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+
+    <!-- ドラムロール・出題開始オーバーレイ -->
+    <div id="dramatic-overlay" class="dramatic-overlay hidden">
+        <div class="dramatic-content">
+            <div id="dramatic-num" class="dramatic-num">第 1 問</div>
+            <div id="dramatic-type" class="dramatic-type">【4択方式】</div>
+        </div>
+    </div>
+
+    <!-- スタート前・リセット時：ルール説明表示画面 -->
+    <div class="card display-card" id="rules-screen">
+        <div class="display-header">
+            <h1>🏆 クイズ大会 🏆</h1>
+            <p class="subtitle">ホストが出題を開始するまでお待ちください</p>
+        </div>
+        <div class="rules-box">
+            <h2>📜 遊び方・ルール</h2>
+            <ul class="rules-list">
+                <li><span class="rule-num">1</span> 画面上の問題文が読み上げられたら <strong>早押しボタン（またはSpaceキー）</strong> をプッシュ！</li>
+                <li><span class="rule-num">2</span> 形式は <strong>【テキスト入力】 【4択】 【文字選択】</strong> の3種類！</li>
+                <li><span class="rule-num">3</span> 早く押して正解するほど高得点！<strong>3連続正解でコンボボーナス</strong> 発生！</li>
+                <li><span class="rule-num">4</span> お手元のスマホ/PC画面から名前を入力して参加してください。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- クイズ進行中画面 -->
+    <div class="card display-card hidden" id="quiz-screen">
+        <div class="display-status-bar">
+            <div class="badge badge-type" id="q-round-badge" style="font-size: 1.4rem; padding: 10px 24px;">第 1 問</div>
+            <div class="badge" id="q-type-badge" style="font-size: 1.4rem; padding: 10px 24px; background: #00e676; color: #000;">テキスト方式</div>
+        </div>
+
+        <div class="display-q-text" id="display-q-text">問題文がここに流れます...</div>
+
+        <!-- 4択選択肢表示エリア -->
+        <div class="choice-grid hidden margin-top" id="display-choices-container" style="gap: 15px;"></div>
+
+        <!-- 早押し通知メッセージ -->
+        <div class="display-buzz-notice hidden" id="display-buzz-notice">⚡️ プレイヤーが早押ししました！</div>
+
+        <!-- 正解表示エリア -->
+        <div class="display-answer-box hidden" id="display-answer-box">
+            <span class="ans-label">💡 模範解答</span>
+            <div class="ans-text" id="display-answer-text">-</div>
+        </div>
+    </div>
+
+    <!-- 最終結果（ランキング表示）画面 -->
+    <div class="card display-card hidden" id="result-screen">
+        <h1 style="font-size: 3rem; color: #ffeb3b; text-align: center;">🏆 最終ランキング 🏆</h1>
+        <table class="score-table margin-top" style="font-size: 1.5rem; margin-top: 30px;">
+            <thead>
+                <tr>
+                    <th style="font-size: 1.5rem; padding: 15px;">順位</th>
+                    <th style="font-size: 1.5rem; padding: 15px;">プレイヤー名</th>
+                    <th style="font-size: 1.5rem; padding: 15px;">スコア</th>
+                </tr>
+            </thead>
+            <tbody id="display-result-list"></tbody>
+        </table>
+    </div>
+
+    <script src="/static/display.js"></script>
+</body>
+</html>
