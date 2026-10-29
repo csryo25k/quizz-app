@@ -3,7 +3,7 @@ import openpyxl
 
 def parse_choice_answer_index(cell_val, choices):
     """
-    H列のセル指定 (C, D, E, F, C列, D列, 1, 2, 3, 4 等) やテキストから
+    セル指定 (C, D, E, F, C列, D列, 1, 2, 3, 4 等) やテキストから
     0-based インデックス (0, 1, 2, 3) を特定する
     """
     if cell_val is None:
@@ -39,6 +39,7 @@ def load_questions(filepath: str, difficulty: str = "all") -> list:
         return []
 
     try:
+        # data_only=True で関数の計算結果を取得
         wb = openpyxl.load_workbook(filepath, data_only=True)
     except Exception as e:
         print(f"[Warning] Failed to open Excel file: {e}")
@@ -83,17 +84,23 @@ def load_questions(filepath: str, difficulty: str = "all") -> list:
             }
             global_id += 1
 
+            # I列(row[8])を優先取得し、空ならH列(row[7])を取得
+            ans_cell_val = None
+            if len(row) > 8 and row[8] is not None and str(row[8]).strip() != "":
+                ans_cell_val = row[8]  # I列
+            elif len(row) > 7 and row[7] is not None and str(row[7]).strip() != "":
+                ans_cell_val = row[7]  # H列
+
             if q_type == "choice":
                 choices = []
-                for col_i in range(2, 6):  # C～F列
+                for col_i in range(2, 6):  # C～F列 (row[2]～row[5])
                     val = row[col_i] if len(row) > col_i and row[col_i] is not None else ""
                     choices.append(str(val).strip())
                 
                 if not any(choices):
                     choices = ["選択肢1", "選択肢2", "選択肢3", "選択肢4"]
 
-                h_val = row[7] if len(row) > 7 and row[7] is not None else "C"  # H列: 解答セル指定
-                ans_idx = parse_choice_answer_index(h_val, choices)
+                ans_idx = parse_choice_answer_index(ans_cell_val, choices)
 
                 item["choices"] = choices
                 item["answer_index"] = ans_idx
@@ -103,13 +110,11 @@ def load_questions(filepath: str, difficulty: str = "all") -> list:
                 if g_val:
                     item["dummy_chars"] = str(g_val).strip()
 
-                h_val = row[7] if len(row) > 7 and row[7] is not None else ""  # H列: 模範解答1つ
-                ans = str(h_val).strip()
+                ans = str(ans_cell_val).strip() if ans_cell_val is not None else ""
                 item["answers"] = [ans] if ans else ["正解"]
 
             elif q_type == "text":
-                h_val = row[7] if len(row) > 7 and row[7] is not None else ""  # H列: カンマ区切り模範解答複数
-                val_str = str(h_val).replace("，", ",")
+                val_str = str(ans_cell_val).replace("，", ",") if ans_cell_val is not None else ""
                 raw_answers = [a.strip() for a in val_str.split(",") if a.strip()]
                 item["answers"] = raw_answers if raw_answers else ["正解"]
 
