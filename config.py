@@ -9,7 +9,7 @@ if not os.path.exists(QUESTIONS_FILE):
 
 # 得点仕様
 SCORE_CORRECT = 10
-SCORE_INCORRECT = -10
+SCORE_INCORRECT = -5
 FIRST_BUZZ_BONUS = 10
 SECOND_BUZZ_BONUS = 5
 THIRD_BUZZ_BONUS = 0
@@ -21,7 +21,7 @@ COMBO_BONUS = 5      # 3問目以降の正解ごとの追加ボーナス
 TIME_LIMIT_CHOICE = 3.0        # 4択早押し: 3秒
 TIME_LIMIT_MHY_PER_CHAR = 3.0  # 文字選択式: 各文字3秒
 TIME_LIMIT_TEXT = 10.0         # テキスト式: 10秒
-TIME_LIMIT_THROUGH = 5.0      # 全文表示後の早押し受付時間: 5秒
+TIME_LIMIT_THROUGH = 10.0      # 全文表示後の早押し受付時間: 5秒
 
 # 自動進行設定
 AUTO_ADVANCE_DELAY = 4.0     # 解答発表後の自動次問題移行間隔（秒）
