@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クイズ画面 - ディスプレイ</title>
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <title>クイズ メインモニター画面</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        /* 画面全体を1画面(100vh)に収め、スクロールバーを禁止 */
+        /* 画面全体を1画面(100vh/100dvh)に固定しスクロールを禁止 */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -18,278 +19,291 @@
             height: 100vh;
             height: 100dvh;
             overflow: hidden;
-            background-color: #121212;
+            background: #121212;
             color: #ffffff;
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
         }
 
-        .container {
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2vh 2vw;
+        }
+
+        /* 共通カードスタイル：1画面内に収めるFlex構造 */
+        .display-card {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            max-height: 94vh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 100%;
-            padding: 2vh 3vw;
-        }
-
-        /* ヘッダー情報（問題番号・ジャンル等） */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 8vh;
-            border-bottom: 2px solid #333;
-        }
-
-        .q-number {
-            font-size: 3.5vh;
-            font-weight: bold;
-            color: #ffca28;
-        }
-
-        .status-badge {
-            font-size: 2.5vh;
-            padding: 0.5vh 2vw;
-            background-color: #333;
-            border-radius: 20px;
-        }
-
-        /* 問題文表示エリア（可変高で中央配置） */
-        .question-area {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2vh 0;
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 3vh 3vw;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
             overflow: hidden;
         }
 
-        .question-text {
-            font-size: clamp(24px, 4.5vh, 52px);
-            line-height: 1.5;
-            font-weight: 600;
-            word-break: break-all;
-            text-align: left;
-            width: 100%;
-            max-height: 100%;
-            overflow-y: auto; /* 万が一極端に長い問題文が来ても崩れを防止 */
+        .hidden {
+            display: none !important;
         }
 
-        /* 早押しプレイヤー表示エリア */
-        .buzzed-player-area {
-            height: 10vh;
+        /* ルール説明画面 */
+        #rules-screen {
+            text-align: center;
+        }
+
+        .display-header h1 {
+            font-size: clamp(28px, 4.5vh, 48px);
+            color: #ffca28;
+            margin-bottom: 0.5vh;
+        }
+
+        .subtitle {
+            font-size: clamp(15px, 2.2vh, 22px);
+            color: #aaa;
+        }
+
+        .rules-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-top: 2vh;
+            background: #282828;
+            border-radius: 12px;
+            padding: 2.5vh 3vw;
+        }
+
+        .rules-box h2 {
+            font-size: clamp(20px, 3.2vh, 32px);
+            margin-bottom: 2vh;
+            color: #4caf50;
+        }
+
+        .rules-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8vh;
+            text-align: left;
+        }
+
+        .rules-list li {
+            font-size: clamp(14px, 2.2vh, 22px);
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 12px;
+            line-height: 1.4;
         }
 
-        .buzzer-banner {
-            font-size: 4vh;
+        .rule-num {
+            background: #ffca28;
+            color: #000;
             font-weight: bold;
+            width: 1.8em;
+            height: 1.8em;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* クイズ進行画面 */
+        #quiz-screen {
+            justify-content: space-between;
+            gap: 2vh;
+        }
+
+        .display-status-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .badge {
+            border-radius: 30px;
+            font-weight: bold;
+        }
+
+        .display-q-text {
+            flex: 1;
+            font-size: clamp(22px, 4vh, 42px);
+            line-height: 1.5;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            word-break: break-all;
+            overflow-y: auto;
+            padding: 1vh 0;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .display-buzz-notice {
+            font-size: clamp(18px, 3vh, 30px);
+            background: #e53935;
             color: #ffffff;
-            background-color: #e53935;
-            padding: 1vh 4vw;
-            border-radius: 12px;
+            padding: 1vh 2vw;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
             animation: pulse 1s infinite alternate;
-            display: none;
         }
 
         @keyframes pulse {
             from { transform: scale(1); }
-            to { transform: scale(1.03); }
+            to { transform: scale(1.02); }
         }
 
-        /* 正解・回答発表エリア */
-        .result-area {
-            height: 12vh;
+        .display-answer-box {
+            background: #2a2a2a;
+            border: 2px solid #ffca28;
+            border-radius: 12px;
+            padding: 1.5vh 2vw;
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+        }
+
+        .ans-label {
+            font-size: clamp(16px, 2.5vh, 24px);
+            color: #ffca28;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .ans-text {
+            font-size: clamp(20px, 3.5vh, 36px);
+            color: #00e676;
+            font-weight: bold;
+        }
+
+        /* 最終ランキング画面 */
+        #result-screen {
+            justify-content: flex-start;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2vh;
+        }
+
+        .score-table th, .score-table td {
+            padding: 1.5vh 1vw;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+
+        .score-table th {
+            background: #2c2c2c;
+            color: #ffca28;
+        }
+
+        /* 出題演出オーバーレイ */
+        .dramatic-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #1e1e1e;
-            border-radius: 12px;
-            border: 2px solid #ffca28;
-            padding: 1vh 2vw;
-            display: none;
+            z-index: 9999;
         }
 
-        .result-label {
-            font-size: 3vh;
-            color: #ffca28;
-            margin-right: 2vw;
-        }
-
-        .result-text {
-            font-size: 4vh;
-            font-weight: bold;
-            color: #4caf50;
-        }
-
-        /* フッター（プレイヤー順位・スコア） */
-        .footer-scores {
-            height: 12vh;
-            display: flex;
-            gap: 1.5vw;
-            overflow-x: auto;
-            align-items: center;
-            border-top: 1px solid #333;
-            padding-top: 1vh;
-        }
-
-        .score-card {
-            background-color: #262626;
-            padding: 1vh 1.5vw;
-            border-radius: 8px;
-            min-width: 140px;
+        .dramatic-content {
             text-align: center;
-            flex-shrink: 0;
         }
 
-        .score-card .p-name {
-            font-size: 2vh;
-            color: #bbb;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .score-card .p-score {
-            font-size: 3vh;
+        .dramatic-num {
+            font-size: clamp(40px, 10vh, 90px);
+            color: #ffeb3b;
             font-weight: bold;
-            color: #00e676;
+        }
+
+        .dramatic-type {
+            font-size: clamp(24px, 5vh, 46px);
+            color: #ffffff;
+            margin-top: 2vh;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="q-number" id="qNumber">READY</div>
-            <div class="status-badge" id="statusBadge">待機中</div>
-        </div>
 
-        <div class="question-area">
-            <div class="question-text" id="questionText">問題が開始されるのを待っています...</div>
-        </div>
-
-        <div class="buzzed-player-area">
-            <div class="buzzer-banner" id="buzzerBanner">ランプ点灯中</div>
-        </div>
-
-        <div class="result-area" id="resultArea">
-            <div class="result-label">【正解】</div>
-            <div class="result-text" id="resultText">-</div>
-        </div>
-
-        <div class="footer-scores" id="footerScores">
-            <!-- プレイヤー一覧とスコアがここに動的表示されます -->
+    <!-- ドラムロール・出題開始オーバーレイ -->
+    <div id="dramatic-overlay" class="dramatic-overlay hidden">
+        <div class="dramatic-content">
+            <div id="dramatic-num" class="dramatic-num">第 1 問</div>
+            <div id="dramatic-type" class="dramatic-type">【4択方式】</div>
         </div>
     </div>
 
-    <script>
-        const socket = io();
+    <!-- スタート前・リセット時：ルール説明表示画面 -->
+    <div class="card display-card" id="rules-screen">
+        <div class="display-header">
+            <h1>🏆 クイズ大会 🏆</h1>
+            <p class="subtitle">ホストが出題を開始するまでお待ちください</p>
+        </div>
+        <div class="rules-box">
+            <h2>📜 遊び方・ルール</h2>
+            <ul class="rules-list">
+                <li><span class="rule-num">1</span> 画面上の問題文が読み上げられたら <strong>早押しボタン（またはSpaceキー）</strong> をプッシュ！</li>
+                <li><span class="rule-num">2</span> 形式は <strong>【テキスト入力】 【4択】 【文字選択】</strong> の3種類！</li>
+                <li><span class="rule-num">3</span> 早く押して正解するほど高得点！<strong>3連続正解でコンボボーナス</strong> 発生！</li>
+                <li><span class="rule-num">4</span> お手元のスマホ/PC画面から名前を入力して参加してください。</li>
+            </ul>
+        </div>
+    </div>
 
-        const qNumber = document.getElementById('qNumber');
-        const statusBadge = document.getElementById('statusBadge');
-        const questionText = document.getElementById('questionText');
-        const buzzerBanner = document.getElementById('buzzerBanner');
-        const resultArea = document.getElementById('resultArea');
-        const resultText = document.getElementById('resultText');
-        const footerScores = document.getElementById('footerScores');
+    <!-- クイズ進行中画面 -->
+    <div class="card display-card hidden" id="quiz-screen">
+        <div class="display-status-bar">
+            <div class="badge badge-type" id="q-round-badge" style="font-size: clamp(1.1rem, 2.2vh, 1.5rem); padding: 0.8vh 2vw;">第 1 問</div>
+            <div class="badge" id="q-type-badge" style="font-size: clamp(1.1rem, 2.2vh, 1.5rem); padding: 0.8vh 2vw; background: #00e676; color: #000;">テキスト方式</div>
+        </div>
 
-        let charTimer = null;
-        let fullQuestionText = "";
-        let currentCharIndex = 0;
+        <div class="display-q-text" id="display-q-text">問題文がここに流れます...</div>
 
-        // 問題開始時
-        socket.on('question_start_player', (data) => {
-            resetDisplay();
-            qNumber.textContent = `第 ${data.round_q_num || data.id} 問`;
-            statusBadge.textContent = "出題中";
-            
-            fullQuestionText = data.question || "";
-            currentCharIndex = 0;
-            questionText.textContent = "";
+        <!-- 4択選択肢表示エリア -->
+        <div class="choice-grid hidden margin-top" id="display-choices-container"></div>
 
-            const charSpeed = (data.char_speed || 0.08) * 1000;
+        <!-- 早押し通知メッセージ -->
+        <div class="display-buzz-notice hidden" id="display-buzz-notice">⚡️ プレイヤーが早押ししました！</div>
 
-            // 1文字ずつ流すタイマー
-            clearInterval(charTimer);
-            charTimer = setInterval(() => {
-                if (currentCharIndex < fullQuestionText.length) {
-                    questionText.textContent += fullQuestionText[currentCharIndex];
-                    currentCharIndex++;
-                } else {
-                    clearInterval(charTimer);
-                }
-            }, charSpeed);
-        });
+        <!-- 正解表示エリア -->
+        <div class="display-answer-box hidden" id="display-answer-box">
+            <span class="ans-label">💡 模範解答</span>
+            <div class="ans-text" id="display-answer-text">-</div>
+        </div>
+    </div>
 
-        // 誰かが早押し（buzz）したとき
-        socket.on('player_buzzed_notice', (data) => {
-            // 早押しプレイヤーの横断幕を表示
-            buzzerBanner.textContent = `⚡ ${data.player_name || 'プレイヤー'} さんが回答中！`;
-            buzzerBanner.style.display = 'block';
+    <!-- 最終結果（ランキング表示）画面 -->
+    <div class="card display-card hidden" id="result-screen">
+        <h1 style="font-size: clamp(2rem, 5vh, 3.5rem); color: #ffeb3b; text-align: center;">🏆 最終ランキング 🏆</h1>
+        <table class="score-table margin-top">
+            <thead>
+                <tr>
+                    <th style="font-size: clamp(1.1rem, 2.5vh, 1.6rem); padding: 1.2vh;">順位</th>
+                    <th style="font-size: clamp(1.1rem, 2.5vh, 1.6rem); padding: 1.2vh;">プレイヤー名</th>
+                    <th style="font-size: clamp(1.1rem, 2.5vh, 1.6rem); padding: 1.2vh;">スコア</th>
+                </tr>
+            </thead>
+            <tbody id="display-result-list"></tbody>
+        </table>
+    </div>
 
-            // ★ポイント: charTimer を clearInterval しない！
-            // ディスプレイ画面では問題文の文字送りを停止せず、そのまま最後まで流し続けます。
-        });
-
-        // 不正解通知
-        socket.on('player_incorrect_notice', (data) => {
-            buzzerBanner.style.display = 'none';
-        });
-
-        // スルー（時間切れ・全員不答）
-        socket.on('question_through', (data) => {
-            finishQuestion(data.correct_answers);
-        });
-
-        // 解答発表
-        socket.on('answer_result', (data) => {
-            finishQuestion(data.correct_answers);
-        });
-
-        function finishQuestion(correctAnswers) {
-            clearInterval(charTimer);
-            // 問題文を最後まで完全表示
-            questionText.textContent = fullQuestionText;
-            
-            buzzerBanner.style.display = 'none';
-            statusBadge.textContent = "終了";
-
-            let ansStr = "";
-            if (Array.isArray(correctAnswers)) {
-                ansStr = correctAnswers.join(" / ");
-            } else {
-                ansStr = correctAnswers || "";
-            }
-
-            resultText.textContent = ansStr;
-            resultArea.style.display = 'flex';
-        }
-
-        // プレイヤー＆スコア一覧の更新
-        socket.on('update_players', (players) => {
-            footerScores.innerHTML = "";
-            Object.values(players).forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'score-card';
-                card.innerHTML = `
-                    <div class="p-name">${escapeHtml(p.name || 'ゲスト')}</div>
-                    <div class="p-score">${p.score || 0} pt</div>
-                `;
-                footerScores.appendChild(card);
-            });
-        });
-
-        function resetDisplay() {
-            clearInterval(charTimer);
-            buzzerBanner.style.display = 'none';
-            resultArea.style.display = 'none';
-            resultText.textContent = "-";
-        }
-
-        function escapeHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-    </script>
+    <script src="/static/display.js"></script>
 </body>
 </html>
