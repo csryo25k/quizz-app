@@ -18,10 +18,10 @@ COMBO_THRESHOLD = 3  # 3問以上連続正解でボーナス発動
 COMBO_BONUS = 5      # 3問目以降の正解ごとの追加ボーナス
 
 # 回答制限時間（秒）
-TIME_LIMIT_CHOICE = 6.0        # 4択早押し: 3秒
+TIME_LIMIT_CHOICE = 6.0        # 4択早押し: 6秒
 TIME_LIMIT_MHY_PER_CHAR = 3.0  # 文字選択式: 各文字3秒
 TIME_LIMIT_TEXT = 10.0         # テキスト式: 10秒
-TIME_LIMIT_THROUGH = 10.0      # 全文表示後の早押し受付時間: 5秒
+TIME_LIMIT_THROUGH = 10.0      # 全文表示後の早押し受付時間: 10秒
 
 # 自動進行設定
 AUTO_ADVANCE_DELAY = 4.0     # 解答発表後の自動次問題移行間隔（秒）
