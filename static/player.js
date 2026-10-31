@@ -1,9 +1,10 @@
 const socket = io();
 
-let playerId = localStorage.getItem("quiz_player_id");
+// タブごとのID独立保持のため sessionStorage を優先（同一ブラウザ複数タブでの混線・勝手なスコア増加防止）
+let playerId = sessionStorage.getItem("quiz_player_id");
 if (!playerId) {
-    playerId = "p_" + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("quiz_player_id", playerId);
+    playerId = "p_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now().toString(36);
+    sessionStorage.setItem("quiz_player_id", playerId);
 }
 
 let currentQuestion = null;
@@ -99,7 +100,7 @@ socket.on("player_registered", (data) => {
 
 socket.on("kicked", (data) => {
     alert(data && data.message ? data.message : "ホストによってキックされました。");
-    localStorage.removeItem("quiz_player_id");
+    sessionStorage.removeItem("quiz_player_id");
     localStorage.removeItem("quiz_player_name");
     location.reload();
 });
@@ -203,7 +204,10 @@ socket.on("question_start_player", (data) => {
 
 function startBuzzTimer(limitSec) {
     if (buzzTimer) clearInterval(buzzTimer);
-    if (timerBox) timerBox.classList.remove("hidden");
+    if (timerBox) {
+        timerBox.classList.remove("hidden");
+        timerBox.style.display = "block";
+    }
 
     const startTime = Date.now();
     const durationMs = limitSec * 1000;
@@ -245,26 +249,43 @@ socket.on("buzz_success_me", (data) => {
 });
 
 function showAnswerUI(type, limit, mhyChoices, choices) {
-    if (answerUI) answerUI.classList.remove("hidden");
+    if (answerUI) {
+        answerUI.classList.remove("hidden");
+        answerUI.style.display = "block";
+    }
     startAnswerTimer(limit);
 
     if (type === "choice" && uiChoice) {
         uiChoice.classList.remove("hidden");
+        uiChoice.style.display = "grid";
         uiChoice.innerHTML = "";
-        (choices || []).forEach((choiceText) => {
+
+        // 混雑時に choices が空で届いた場合の安全フォールバック
+        let listToRender = (choices && choices.length > 0) ? choices : (currentQuestion ? currentQuestion.choices : []);
+        if (!listToRender || listToRender.length === 0) {
+            listToRender = ["選択肢1", "選択肢2", "選択肢3", "選択肢4"];
+        }
+
+        listToRender.forEach((choiceText) => {
             const btn = document.createElement("button");
             btn.className = "choice-btn";
+            btn.type = "button";
             btn.innerText = choiceText;
-            btn.onclick = () => submitAnswer(choiceText);
+            btn.onclick = (e) => {
+                e.preventDefault();
+                submitAnswer(choiceText);
+            };
             uiChoice.appendChild(btn);
         });
     } else if (type === "mhy" && uiMhy) {
         uiMhy.classList.remove("hidden");
+        uiMhy.style.display = "flex";
         const enteredEl = document.getElementById("mhy-entered");
         if (enteredEl) enteredEl.innerText = "";
         renderMhyStepChoices(mhyChoices);
     } else if (type === "text" && uiText) {
         uiText.classList.remove("hidden");
+        uiText.style.display = "flex";
         if (textInput) {
             textInput.value = "";
             textInput.focus();
@@ -276,11 +297,16 @@ function renderMhyStepChoices(choices) {
     const grid = document.getElementById("mhy-choice-grid");
     if (!grid) return;
     grid.innerHTML = "";
-    (choices || []).forEach((char) => {
+    grid.style.display = "grid";
+
+    let listToRender = (choices && choices.length > 0) ? choices : ["あ", "い", "う", "え"];
+    listToRender.forEach((char) => {
         const btn = document.createElement("button");
         btn.className = "choice-btn";
+        btn.type = "button";
         btn.innerText = char;
-        btn.onclick = () => {
+        btn.onclick = (e) => {
+            e.preventDefault();
             socket.emit("submit_mhy_step", { player_id: playerId, char: char });
         };
         grid.appendChild(btn);
@@ -298,7 +324,10 @@ socket.on("mhy_next_step", (data) => {
 
 function startAnswerTimer(limitSec) {
     if (answerTimer) clearInterval(answerTimer);
-    if (timerBox) timerBox.classList.remove("hidden");
+    if (timerBox) {
+        timerBox.classList.remove("hidden");
+        timerBox.style.display = "block";
+    }
 
     const startTime = Date.now();
     const durationMs = limitSec * 1000;
@@ -372,11 +401,26 @@ socket.on("last_question_notice", (data) => {
 });
 
 function resetAnswerUI() {
-    if (answerUI) answerUI.classList.add("hidden");
-    if (uiChoice) uiChoice.classList.add("hidden");
-    if (uiMhy) uiMhy.classList.add("hidden");
-    if (uiText) uiText.classList.add("hidden");
-    if (timerBox) timerBox.classList.add("hidden");
+    if (answerUI) {
+        answerUI.classList.add("hidden");
+        answerUI.style.display = "none";
+    }
+    if (uiChoice) {
+        uiChoice.classList.add("hidden");
+        uiChoice.style.display = "none";
+    }
+    if (uiMhy) {
+        uiMhy.classList.add("hidden");
+        uiMhy.style.display = "none";
+    }
+    if (uiText) {
+        uiText.classList.add("hidden");
+        uiText.style.display = "none";
+    }
+    if (timerBox) {
+        timerBox.classList.add("hidden");
+        timerBox.style.display = "none";
+    }
 }
 
 function resetAllUI() {

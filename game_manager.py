@@ -110,11 +110,12 @@ class GameManager:
                 'is_connected': True
             }
         else:
-            # 既存プレイヤーの再接続を安全に許可（通信瞬断対策）
             self.players[player_id]['sid'] = sid
             self.players[player_id]['is_connected'] = True
             if name:
                 self.players[player_id]['name'] = name
+            if self.players[player_id].get('score', 0) < 0:
+                self.players[player_id]['score'] = 0
         return True
 
     def kick_player(self, player_id):
@@ -377,7 +378,6 @@ class GameManager:
                     correct_text = choices[self.correct_choice_index]
             
             user_ans_str = str(answer).strip()
-            # テキストによる絶対比較を行う（文字列が「1930年代」等の数字であってもインデックス判定へのフォールバックを防止）
             is_correct = (user_ans_str == correct_text or check_answer(user_ans_str, [correct_text]))
 
         elif qtype in ('text', 'mhy'):
@@ -396,11 +396,13 @@ class GameManager:
             pinfo['combo'] += 1
             combo_bonus = COMBO_BONUS if pinfo['combo'] >= COMBO_THRESHOLD else 0
             gained_score = SCORE_CORRECT + buzz_bonus + combo_bonus
-            pinfo['score'] += gained_score  # マイナススコア制限を解除して正常加算
+            # マイナスにならないよう最低0を保証
+            pinfo['score'] = max(0, pinfo['score'] + gained_score)
         else:
             pinfo['combo'] = 0
             gained_score = SCORE_INCORRECT
-            pinfo['score'] += gained_score  # -5pt 減点を正しく反映
+            # -5pt減算されつつ、最低0を保証
+            pinfo['score'] = max(0, pinfo['score'] + gained_score)
 
         full_q = self.current_question.get('full_question') or self.current_question.get('question', '') if self.current_question else ''
         official_ans = self.get_official_answer()
@@ -446,7 +448,8 @@ class GameManager:
         
         pinfo['combo'] = 0
         gained_score = SCORE_INCORRECT
-        pinfo['score'] += gained_score  # タイムアウト時にも正しく -5pt 減点
+        # タイムアウト時も-5pt減算かつ最低0を保証
+        pinfo['score'] = max(0, pinfo['score'] + gained_score)
 
         entered_text = ""
         if player_id in self.mhy_progress:
