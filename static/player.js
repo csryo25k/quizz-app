@@ -1,10 +1,10 @@
 const socket = io();
 
-// タブごとのID独立保持のため sessionStorage を優先（同一ブラウザ複数タブでの混線・勝手なスコア増加防止）
-let playerId = sessionStorage.getItem("quiz_player_id");
+// 離脱後のデータ・スコア復帰のため localStorage を利用して playerId を永続化
+let playerId = localStorage.getItem("quiz_player_id");
 if (!playerId) {
     playerId = "p_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now().toString(36);
-    sessionStorage.setItem("quiz_player_id", playerId);
+    localStorage.setItem("quiz_player_id", playerId);
 }
 
 let currentQuestion = null;
@@ -100,7 +100,7 @@ socket.on("player_registered", (data) => {
 
 socket.on("kicked", (data) => {
     alert(data && data.message ? data.message : "ホストによってキックされました。");
-    sessionStorage.removeItem("quiz_player_id");
+    localStorage.removeItem("quiz_player_id");
     localStorage.removeItem("quiz_player_name");
     location.reload();
 });
@@ -272,10 +272,8 @@ function showAnswerUI(type, limit, mhyChoices, choices) {
             btn.innerText = choiceText;
             btn.onclick = (e) => {
                 e.preventDefault();
-                // 4択ボタン連打防止：押されたら直ちに全選択肢を無効化
                 const allBtns = uiChoice.querySelectorAll(".choice-btn");
                 allBtns.forEach(b => b.disabled = true);
-
                 submitAnswer(choiceText);
             };
             uiChoice.appendChild(btn);
@@ -310,10 +308,8 @@ function renderMhyStepChoices(choices) {
         btn.innerText = char;
         btn.onclick = (e) => {
             e.preventDefault();
-            // mhyボタン連打防止：ボタンが押されたら直ちにグリッド内の全ボタンを無効化
             const allBtns = grid.querySelectorAll(".choice-btn");
             allBtns.forEach(b => b.disabled = true);
-
             socket.emit("submit_mhy_step", { player_id: playerId, char: char });
         };
         grid.appendChild(btn);

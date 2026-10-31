@@ -218,6 +218,21 @@ def handle_join(data):
         })
         socketio.emit('update_players', game.players)
 
+        # 途中復帰時サポート：クイズが現在出題中の場合、その問題データを個別に送信
+        if game.question_active and game.current_question and not game.phase_finished:
+            curr_q = game.current_question
+            emit('question_start_player', {
+                'id': curr_q['id'],
+                'question': curr_q['question'],
+                'type': curr_q['type'],
+                'choices': curr_q.get('choices', []),
+                'char_speed': game.char_speed,
+                'extra_buzz_sec': BUZZ_TIME_LIMIT,
+                'buzz_limit_sec': BUZZ_TIME_LIMIT,
+                'round_q_num': game.round_q_count,
+                'finish_pending': finish_after_current_q
+            })
+
 @socketio.on('kick_player')
 def handle_kick_player(data):
     if not is_authenticated_host():
@@ -429,7 +444,6 @@ def handle_submit_mhy_step(data):
 
     valid, is_complete, is_correct, entered, next_choices, limit_sec, gained_score, _, new_step_id = game.process_mhy_step(player_id, char)
 
-    # 連打による2回目以降の無効リクエスト(valid=False)は完全に無視
     if not valid:
         return
 
@@ -592,5 +606,5 @@ def handle_disconnect():
     socketio.emit('update_players', game.players)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.path.get("PORT", 5000) if hasattr(os.path, "get") else os.environ.get("PORT", 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=False)

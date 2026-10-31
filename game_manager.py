@@ -101,20 +101,37 @@ class GameManager:
     def register_player(self, player_id, name, sid):
         if player_id in self.kicked_player_ids:
             return False
-        if player_id not in self.players:
-            self.players[player_id] = {
-                'name': name,
-                'score': 0,
-                'combo': 0,
-                'sid': sid,
-                'is_connected': True
-            }
-        else:
+        
+        # 1. 同じ player_id での復帰（離脱前のスコア・コンボを完全保持）
+        if player_id in self.players:
             self.players[player_id]['sid'] = sid
             self.players[player_id]['is_connected'] = True
             if name:
                 self.players[player_id]['name'] = name
             self.players[player_id]['score'] = max(0, self.players[player_id].get('score', 0))
+            return True
+
+        # 2. player_id が異なるが、離脱中(is_connected==False)で同一名前のプレイヤーが存在する場合の復元
+        for existing_pid, pdata in list(self.players.items()):
+            if not pdata.get('is_connected', True) and pdata.get('name') == name:
+                self.players[player_id] = {
+                    'name': name,
+                    'score': max(0, pdata.get('score', 0)),
+                    'combo': pdata.get('combo', 0),
+                    'sid': sid,
+                    'is_connected': True
+                }
+                del self.players[existing_pid]
+                return True
+
+        # 3. 完全新規プレイヤー
+        self.players[player_id] = {
+            'name': name,
+            'score': 0,
+            'combo': 0,
+            'sid': sid,
+            'is_connected': True
+        }
         return True
 
     def kick_player(self, player_id):
@@ -268,7 +285,6 @@ class GameManager:
         return rank, buzz_bonus, limit_sec, frozen_text, mhy_choices, step_id, player_choices
 
     def process_mhy_step(self, player_id, char):
-        # 連打判定：すでに回答済み、または進行状況が存在しないリクエストは無効(valid=False)とする
         if (player_id in self.submitted_answers and not self.submitted_answers[player_id].get('is_timeout')) or player_id not in self.mhy_progress:
             return False, False, False, "", [], 0, 0, False, 0
 
@@ -283,17 +299,14 @@ class GameManager:
                 prog['step_id'] += 1
 
                 if prog['char_idx'] >= len(self.mhy_target):
-                    # 全文字一致：正解完了 (valid=True, is_complete=True, is_correct=True)
                     success, is_correct, gained, all_completed = self.process_answer(player_id, prog['entered'])
                     return True, True, True, prog['entered'], [], 0, gained, all_completed, prog['step_id']
                 else:
-                    # 正しい文字：次のステップへ (valid=True, is_complete=False, is_correct=True)
                     next_char = self.mhy_target[prog['char_idx']]
                     next_choices = self.generate_mhy_choices(next_char)
                     self.answer_deadline = time.time() + TIME_LIMIT_MHY_PER_CHAR + 2.0
                     return True, False, True, prog['entered'], next_choices, TIME_LIMIT_MHY_PER_CHAR, 0, False, prog['step_id']
 
-        # 誤った文字：不正解確定 (valid=True, is_complete=True, is_correct=False)
         wrong_ans = prog['entered'] + str(char)
         success, is_correct, gained, all_completed = self.process_answer(player_id, wrong_ans)
         return True, True, False, wrong_ans, [], 0, gained, all_completed, prog['step_id']
@@ -402,12 +415,10 @@ class GameManager:
             pinfo['combo'] += 1
             combo_bonus = COMBO_BONUS if pinfo['combo'] >= COMBO_THRESHOLD else 0
             gained_score = SCORE_CORRECT + buzz_bonus + combo_bonus
-            # 最低0ptを厳格に保持
             pinfo['score'] = max(0, pinfo.get('score', 0) + gained_score)
         else:
             pinfo['combo'] = 0
             gained_score = SCORE_INCORRECT
-            # -5pt減算されつつも最低0ptを厳格に保持
             pinfo['score'] = max(0, pinfo.get('score', 0) + gained_score)
 
         full_q = self.current_question.get('full_question') or self.current_question.get('question', '') if self.current_question else ''
@@ -457,7 +468,6 @@ class GameManager:
         
         pinfo['combo'] = 0
         gained_score = SCORE_INCORRECT
-        # タイムアウト時も最低0ptを厳格に保持
         pinfo['score'] = max(0, pinfo.get('score', 0) + gained_score)
 
         entered_text = ""
