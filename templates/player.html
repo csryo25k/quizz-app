@@ -19,10 +19,10 @@
             width: 100%;
             height: 100vh;
             height: 100dvh; /* iOS Safari等のツールバー対策 */
-            overflow: hidden; /* 外枠の無駄なスクロールを完全に防止 */
+            overflow: hidden; /* 外枠のスクロール防止 */
             background: #121212;
             color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         }
 
         body {
@@ -37,7 +37,6 @@
             width: 100%;
             max-width: 500px;
             height: 100%;
-            max-height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -53,12 +52,15 @@
             display: none !important;
         }
 
-        /* --- 参加登録画面 --- */
-        #join-screen {
+        /* --- 1. 参加登録画面 (setup-screen) --- */
+        #setup-screen {
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
+            height: 100%;
             gap: 20px;
+            text-align: center;
         }
 
         .join-title {
@@ -107,13 +109,16 @@
             transform: scale(0.98);
         }
 
-        /* --- メインゲーム画面 --- */
+        /* --- 2. メインゲーム画面 (game-screen) --- */
         #game-screen {
+            display: flex;
+            flex-direction: column;
             justify-content: space-between;
+            height: 100%;
             gap: 10px;
         }
 
-        /* 1. ステータスバー（自分情報） */
+        /* ステータスバー（自分情報） */
         .player-status-bar {
             display: flex;
             justify-content: space-between;
@@ -125,26 +130,30 @@
             flex-shrink: 0;
         }
 
-        .player-name-display {
+        .player-name-badge {
             font-size: 1.1rem;
             color: #ffca28;
         }
 
-        .player-score-display {
-            font-size: 1.2rem;
-            color: #00e676;
+        .score-info {
+            display: flex;
+            gap: 12px;
+            font-size: 1.1rem;
         }
 
-        /* 2. 参加者一覧エリア（5人以上接続時のレイアウト保護設定） */
+        .score-val { color: #00e676; }
+        .combo-val { color: #ff9800; }
+
+        /* 参加者一覧エリア（5人以上接続時の自動スクロール設定） */
         .players-list-container {
             width: 100%;
-            max-height: 110px; /* 人数が増えても110pxまでに高さを制限 */
+            max-height: 95px;  /* 人数が増えても95pxまでに高さを制限 */
             overflow-y: auto;  /* 溢れた場合は枠内スクロール */
             background: #252525;
             border-radius: 8px;
             padding: 8px;
             border: 1px solid #333;
-            flex-shrink: 1; /* 画面が狭い時は自ら縮む */
+            flex-shrink: 1;    /* 画面が狭い時は自ら縮む */
             -webkit-overflow-scrolling: touch;
         }
 
@@ -160,23 +169,8 @@
             gap: 6px;
         }
 
-        .player-chip {
-            background: #333;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .player-chip.me {
-            border: 1px solid #ffca28;
-            background: #3a3214;
-        }
-
-        /* 3. 問題表示エリア */
-        .question-box {
+        /* 問題表示ボックス */
+        .question-display-box {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -187,29 +181,77 @@
             padding: 12px;
             text-align: center;
             min-height: 80px;
-            overflow-y: auto;
-        }
-
-        .question-text {
             font-size: 1.2rem;
             line-height: 1.4;
             font-weight: 600;
             word-break: break-all;
+            overflow-y: auto;
         }
 
-        /* 4. 早押しボタン・回答入力エリア（絶対保護エリア） */
+        /* タイマー表示 */
+        .timer-container {
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .timer-bar-wrapper {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: #ff5252;
+            transition: width 0.05s linear;
+        }
+
+        .timer-text {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #bbb;
+            margin-top: 2px;
+        }
+
+        /* メッセージ・正解表示エリア */
+        .msg-area {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: center;
+        }
+
+        .buzz-status {
+            font-size: 0.95rem;
+            color: #ffca28;
+            font-weight: bold;
+        }
+
+        .correct-ans-box {
+            background: #1b5e20;
+            color: #ffffff;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* --- 3. 操作・ボタンエリア（絶対保護エリア） --- */
         .action-area {
             flex-shrink: 0 !important; /* 人数が増えても絶対に領域を潰させない */
             margin-top: auto;
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding-top: 6px;
+            gap: 8px;
         }
 
         /* 早押しボタン */
-        .buzz-btn {
+        .buzz-button {
             width: 100%;
             height: 110px;
             min-height: 90px;
@@ -225,20 +267,20 @@
             transition: transform 0.05s, box-shadow 0.05s;
         }
 
-        .buzz-btn:active:not(:disabled) {
+        .buzz-button:active:not(:disabled) {
             transform: translateY(4px);
             box-shadow: 0 2px 0 #9b0000, 0 4px 8px rgba(0,0,0,0.4);
         }
 
-        .buzz-btn:disabled {
+        .buzz-button:disabled {
             background: #555555;
             box-shadow: none;
             color: #888888;
             cursor: not-allowed;
         }
 
-        /* 4択ボタンコンテナ */
-        .choice-container {
+        /* 4択UI */
+        .choice-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
@@ -261,14 +303,40 @@
             background: #2980b9;
         }
 
-        /* テキスト入力コンテナ */
-        .text-answer-container {
+        /* 文字選択(mhy)UI */
+        .mhy-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .mhy-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00e676;
+            letter-spacing: 2px;
+            min-height: 32px;
+            text-align: center;
+            background: #2a2a2a;
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .mhy-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        /* テキスト入力UI */
+        .input-group-row {
             display: flex;
             gap: 8px;
             width: 100%;
         }
 
-        .text-answer-container input {
+        .input-group-row input {
             flex: 1;
             padding: 12px;
             font-size: 1.1rem;
@@ -279,48 +347,74 @@
             outline: none;
         }
 
-        /* 文字選択（mhy）コンテナ */
-        .mhy-container {
+        /* --- 4. ド迫力演出（全画面オーバーレイ） --- */
+        .dramatic-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
 
-        .mhy-entered-text {
-            font-size: 1.3rem;
+        .dramatic-content {
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .dramatic-num {
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #ffeb3b;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px #ff9800;
+        }
+
+        .dramatic-type {
+            font-size: 1.6rem;
             font-weight: bold;
             color: #00e676;
-            letter-spacing: 2px;
-            min-height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 28px;
+            border-radius: 40px;
+            border: 2px solid #00e676;
+            display: inline-block;
+        }
+
+        /* --- 5. リザルト画面 (result-screen) --- */
+        #result-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            height: 100%;
             text-align: center;
         }
 
-        .mhy-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .mhy-char-btn {
-            padding: 10px 0;
-            font-size: 1.2rem;
-            font-weight: bold;
-            background: #37474f;
-            color: #fff;
-            border: 1px solid #455a64;
-            border-radius: 6px;
+        .ranking-table th, .ranking-table td {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            font-size: 0.95rem;
         }
 
-        /* 通知・メッセージオーバーレイ */
-        .notice-banner {
+        .ranking-table th {
             background: #333;
             color: #ffca28;
-            padding: 8px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 0.95rem;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -328,60 +422,100 @@
 
     <div class="player-container">
 
-        <!-- 1. 参加登録画面 -->
-        <div id="join-screen" class="player-container">
+        <!-- 1. 参加登録画面 (setup-screen) -->
+        <div id="setup-screen">
             <div class="join-title">🏆 クイズ大会 🏆</div>
             <p style="color: #bbb; font-size: 0.95rem;">お名前を入力して参加してください</p>
             <div class="input-group">
-                <input type="text" id="player-name-input" placeholder="名前を入力（例: たろう）" maxlength="10">
+                <input type="text" id="player-name" placeholder="名前を入力（例: たろう）" maxlength="10">
                 <button class="btn-primary" id="join-btn">参加する</button>
             </div>
         </div>
 
-        <!-- 2. メインゲーム画面 -->
-        <div id="game-screen" class="player-container hidden">
+        <!-- 2. メインゲーム画面 (game-screen) -->
+        <div id="game-screen" class="hidden">
             <!-- プレイヤー情報ヘッダー -->
             <div class="player-status-bar">
-                <div class="player-name-display" id="display-my-name">ゲスト</div>
-                <div class="player-score-display" id="display-my-score">0 pts</div>
+                <div class="player-name-badge" id="display-name">ゲスト</div>
+                <div class="score-info">
+                    <span>スコア: <span class="score-val" id="display-score">0</span> pt</span>
+                    <span>COMBO: <span class="combo-val" id="display-combo">0</span></span>
+                </div>
             </div>
 
-            <!-- 参加者一覧（5人以上でもスクロールでレイアウトを保護） -->
+            <!-- 参加者一覧（5人以上接続時も自動スクロールしてボタンを圧迫しない） -->
             <div class="players-list-container">
                 <div class="players-list-title">👥 参加者一覧</div>
-                <div class="players-grid" id="players-list-grid">
-                    <!-- JSで動的に追加されます -->
+                <div class="players-grid" id="players-list-grid"></div>
+            </div>
+
+            <!-- 問題文表示領域 -->
+            <div class="question-display-box" id="question-box">ホストが出題を開始するまでお待ちください...</div>
+
+            <!-- タイマー表示 -->
+            <div class="timer-container hidden" id="timer-box">
+                <div class="timer-bar-wrapper">
+                    <div class="timer-bar" id="timer-bar"></div>
                 </div>
+                <div class="timer-text" id="timer-count">残り: 0.0 秒</div>
             </div>
 
-            <!-- 問題文表示エリア -->
-            <div class="question-box">
-                <div class="question-text" id="player-question-text">ホストが出題を開始するまでお待ちください...</div>
+            <!-- メッセージ・正解表示領域 -->
+            <div class="msg-area">
+                <div class="buzz-status" id="buzz-status-msg"></div>
+                <div class="result-box hidden" id="result-message"></div>
+                <div class="correct-ans-box hidden" id="correct-answer-box"></div>
             </div>
 
-            <!-- メッセージ・状況通知バナー -->
-            <div class="notice-banner hidden" id="status-notice"></div>
-
-            <!-- 早押しボタン・各種回答入力エリア（絶対保護） -->
+            <!-- 3. 操作・解答UIエリア（絶対保護エリア） -->
             <div class="action-area">
                 <!-- 早押しボタン -->
-                <button class="buzz-btn" id="buzz-btn" disabled>早押し！</button>
+                <button class="buzz-button" id="buzz-btn" disabled>
+                    <span class="buzz-btn-text">早押し！</span>
+                </button>
 
-                <!-- 4択回答エリア -->
-                <div class="choice-container hidden" id="choice-area"></div>
+                <!-- 解答UIコンテナ -->
+                <div class="answer-section hidden" id="answer-ui">
+                    <!-- 4択UI -->
+                    <div class="choice-grid hidden" id="ui-choice"></div>
 
-                <!-- テキスト回答入力エリア -->
-                <div class="text-answer-container hidden" id="text-answer-area">
-                    <input type="text" id="text-answer-input" placeholder="回答を入力...">
-                    <button class="btn-primary" id="text-submit-btn" style="width: 80px;">送信</button>
-                </div>
+                    <!-- 文字選択(mhy)UI -->
+                    <div class="mhy-container hidden" id="ui-mhy">
+                        <div class="mhy-display" id="mhy-entered"></div>
+                        <div class="mhy-grid" id="mhy-choice-grid"></div>
+                    </div>
 
-                <!-- 文字選択（mhy）回答エリア -->
-                <div class="mhy-container hidden" id="mhy-area">
-                    <div class="mhy-entered-text" id="mhy-entered-display"></div>
-                    <div class="mhy-grid" id="mhy-grid-container"></div>
+                    <!-- テキスト入力UI -->
+                    <div class="input-group-row hidden" id="ui-text">
+                        <input type="text" id="text-answer-input" placeholder="回答を入力...">
+                        <button class="btn-primary" id="text-submit-btn" style="width: 80px;">送信</button>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <!-- 4. ド迫力演出オーバーレイ -->
+        <div class="dramatic-overlay hidden" id="dramatic-overlay">
+            <div class="dramatic-content">
+                <div class="dramatic-num" id="dramatic-num">第 1 問</div>
+                <div class="dramatic-type" id="dramatic-type">【 テキスト方式 】</div>
+            </div>
+        </div>
+
+        <!-- 5. リザルト画面 (result-screen) -->
+        <div id="result-screen" class="hidden">
+            <h2 style="color: #ffca28;">🏆 最終結果発表 🏆</h2>
+            <div id="my-final-result" style="font-size: 1.3rem; font-weight: bold; margin-top: 10px;"></div>
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>順位</th>
+                        <th>名前</th>
+                        <th>スコア</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-list"></tbody>
+            </table>
         </div>
 
     </div>
