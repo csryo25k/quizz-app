@@ -260,7 +260,6 @@ function showAnswerUI(type, limit, mhyChoices, choices) {
         uiChoice.style.display = "grid";
         uiChoice.innerHTML = "";
 
-        // 混雑時に choices が空で届いた場合の安全フォールバック
         let listToRender = (choices && choices.length > 0) ? choices : (currentQuestion ? currentQuestion.choices : []);
         if (!listToRender || listToRender.length === 0) {
             listToRender = ["選択肢1", "選択肢2", "選択肢3", "選択肢4"];
@@ -273,6 +272,10 @@ function showAnswerUI(type, limit, mhyChoices, choices) {
             btn.innerText = choiceText;
             btn.onclick = (e) => {
                 e.preventDefault();
+                // 4択ボタン連打防止：押されたら直ちに全選択肢を無効化
+                const allBtns = uiChoice.querySelectorAll(".choice-btn");
+                allBtns.forEach(b => b.disabled = true);
+
                 submitAnswer(choiceText);
             };
             uiChoice.appendChild(btn);
@@ -307,6 +310,10 @@ function renderMhyStepChoices(choices) {
         btn.innerText = char;
         btn.onclick = (e) => {
             e.preventDefault();
+            // mhyボタン連打防止：ボタンが押されたら直ちにグリッド内の全ボタンを無効化
+            const allBtns = grid.querySelectorAll(".choice-btn");
+            allBtns.forEach(b => b.disabled = true);
+
             socket.emit("submit_mhy_step", { player_id: playerId, char: char });
         };
         grid.appendChild(btn);

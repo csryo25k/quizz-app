@@ -427,33 +427,26 @@ def handle_submit_mhy_step(data):
         return
     char = data.get('char')
 
-    success, is_complete, entered, next_choices, limit_sec, gained_score, _, new_step_id = game.process_mhy_step(player_id, char)
+    valid, is_complete, is_correct, entered, next_choices, limit_sec, gained_score, _, new_step_id = game.process_mhy_step(player_id, char)
 
-    if not success and not is_complete:
+    # 連打による2回目以降の無効リクエスト(valid=False)は完全に無視
+    if not valid:
+        return
+
+    if is_complete:
         emit('answer_submitted_ack', {
-            'is_correct': False,
+            'is_correct': is_correct,
             'is_timeout': False,
             'gained_score': gained_score,
             'score': game.players.get(player_id, {}).get('score', 0)
         })
         player_name = game.players.get(player_id, {}).get('name', 'プレイヤー')
-        socketio.emit('player_incorrect_notice', {
-            'player_id': player_id,
-            'player_name': player_name,
-            'message': f'{player_name}さんは不正解でした。'
-        })
-        socketio.emit('update_players', game.players)
-        if game.should_finish_question():
-            finish_answer_phase()
-        return
-
-    if is_complete:
-        emit('answer_submitted_ack', {
-            'is_correct': True,
-            'is_timeout': False,
-            'gained_score': gained_score,
-            'score': game.players.get(player_id, {}).get('score', 0)
-        })
+        if not is_correct:
+            socketio.emit('player_incorrect_notice', {
+                'player_id': player_id,
+                'player_name': player_name,
+                'message': f'{player_name}さんは不正解でした。'
+            })
         socketio.emit('update_players', game.players)
         if game.should_finish_question():
             finish_answer_phase()
@@ -565,7 +558,7 @@ def send_quiz_finished():
         rankings.append({
             'player_id': pid,
             'name': pdata.get('name', 'ゲスト'),
-            'score': pdata.get('score', 0),
+            'score': max(0, pdata.get('score', 0)),
             'combo': pdata.get('combo', 0)
         })
 
