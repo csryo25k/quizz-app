@@ -96,10 +96,12 @@ socket.on("player_buzzed_notice", (data) => {
 });
 
 socket.on("answer_result", (data) => {
+    if (displayBuzzNotice) displayBuzzNotice.classList.add("hidden");
     showAnswerResult(data);
 });
 
 socket.on("question_through", (data) => {
+    if (displayBuzzNotice) displayBuzzNotice.classList.add("hidden");
     showAnswerResult(data);
 });
 

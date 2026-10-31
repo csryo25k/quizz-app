@@ -486,3 +486,38 @@ body {
     80% { transform: scale(1.1); opacity: 1; }
     100% { transform: scale(1); }
 }
+
+/* スマホ等小型端末向け表示崩れ防止レスポンシブスタイル */
+@media (max-width: 600px) {
+    body {
+        padding: 8px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .choice-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px;
+    }
+
+    .choice-btn {
+        padding: 12px;
+        font-size: 1rem;
+        word-break: break-all;
+    }
+
+    .buzz-button {
+        height: 110px;
+    }
+
+    .buzz-btn-text {
+        font-size: 2rem;
+    }
+
+    .question-display-box {
+        font-size: 1.1rem;
+        min-height: 80px;
+    }
+}

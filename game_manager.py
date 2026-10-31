@@ -13,10 +13,10 @@ DIGIT_POOL = list("0123456789")
 ALPHABET_UPPER_POOL = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 ALPHABET_LOWER_POOL = list("abcdefghijklmnopqrstuvwxyz")
 
-def get_character_pool(char: str):
+def get_character_pool(char):
     if not char:
         return HIRAGANA_POOL
-    c = char[0]
+    c = str(char)[0]
     code = ord(c)
     if 'a' <= c <= 'z':
         return ALPHABET_LOWER_POOL
@@ -31,9 +31,10 @@ def get_character_pool(char: str):
     else:
         return HIRAGANA_POOL + KATAKANA_POOL + ALPHABET_LOWER_POOL + ALPHABET_UPPER_POOL + DIGIT_POOL
 
-def parse_dummy_pool(dummy_setting, target_char: str):
+def parse_dummy_pool(dummy_setting, target_char):
+    target_str = str(target_char)
     if not dummy_setting:
-        return get_character_pool(target_char)
+        return get_character_pool(target_str)
     
     setting_str = str(dummy_setting).replace("，", ",")
     tokens = [t.strip() for t in setting_str.split(",") if t.strip()]
@@ -60,7 +61,7 @@ def parse_dummy_pool(dummy_setting, target_char: str):
             seen.add(c)
             unique_pool.append(c)
             
-    return unique_pool if unique_pool else get_character_pool(target_char)
+    return unique_pool if unique_pool else get_character_pool(target_str)
 
 class GameManager:
     def __init__(self):
@@ -109,16 +110,11 @@ class GameManager:
                 'is_connected': True
             }
         else:
-            existing = self.players[player_id]
-            if existing.get('is_connected') and existing.get('sid') and existing.get('sid') != sid:
-                return False
-
+            # 既存プレイヤーの再接続を安全に許可（通信瞬断対策）
             self.players[player_id]['sid'] = sid
             self.players[player_id]['is_connected'] = True
             if name:
                 self.players[player_id]['name'] = name
-            if self.players[player_id].get('score', 0) < 0:
-                self.players[player_id]['score'] = 0
         return True
 
     def kick_player(self, player_id):
@@ -166,7 +162,7 @@ class GameManager:
         if qtype == 'choice':
             orig_choices = list(self.current_question.get('choices', []))
             orig_ans_idx = self.current_question.get('answer_index', 0)
-            self.correct_choice_text = orig_choices[orig_ans_idx] if 0 <= orig_ans_idx < len(orig_choices) else ""
+            self.correct_choice_text = str(orig_choices[orig_ans_idx]) if 0 <= orig_ans_idx < len(orig_choices) else ""
             self.shuffled_choices = orig_choices
             self.correct_choice_index = orig_ans_idx
             
@@ -195,15 +191,16 @@ class GameManager:
         self.max_ans_duration = 2.2 + read_time + extra_buzz_sec + ans_limit
 
     def generate_mhy_choices(self, target_char):
-        choices = [target_char]
+        target_str = str(target_char)
+        choices = [target_str]
         custom_dummies = self.current_question.get('dummy_chars') if self.current_question else None
         
-        pool_chars = parse_dummy_pool(custom_dummies, target_char)
-        pool = [c for c in pool_chars if c != target_char]
+        pool_chars = parse_dummy_pool(custom_dummies, target_str)
+        pool = [str(c) for c in pool_chars if str(c) != target_str]
             
         if len(pool) < 3:
             backup_pool = HIRAGANA_POOL + KATAKANA_POOL + ALPHABET_LOWER_POOL + ALPHABET_UPPER_POOL + DIGIT_POOL
-            additional = [c for c in backup_pool if c != target_char and c not in pool]
+            additional = [str(c) for c in backup_pool if str(c) != target_str and str(c) not in pool]
             pool.extend(additional)
             
         selected_dummies = random.sample(pool, min(3, len(pool)))
@@ -380,14 +377,8 @@ class GameManager:
                     correct_text = choices[self.correct_choice_index]
             
             user_ans_str = str(answer).strip()
-            if user_ans_str == correct_text or check_answer(user_ans_str, [correct_text]):
-                is_correct = True
-            else:
-                try:
-                    ans_idx = int(answer)
-                    is_correct = (ans_idx == self.correct_choice_index)
-                except ValueError:
-                    is_correct = False
+            # テキストによる絶対比較を行う（文字列が「1930年代」等の数字であってもインデックス判定へのフォールバックを防止）
+            is_correct = (user_ans_str == correct_text or check_answer(user_ans_str, [correct_text]))
 
         elif qtype in ('text', 'mhy'):
             answers = self.current_question.get('answers', [])
@@ -405,11 +396,11 @@ class GameManager:
             pinfo['combo'] += 1
             combo_bonus = COMBO_BONUS if pinfo['combo'] >= COMBO_THRESHOLD else 0
             gained_score = SCORE_CORRECT + buzz_bonus + combo_bonus
-            pinfo['score'] = max(0, pinfo['score'] + gained_score)
+            pinfo['score'] += gained_score  # マイナススコア制限を解除して正常加算
         else:
             pinfo['combo'] = 0
             gained_score = SCORE_INCORRECT
-            pinfo['score'] = max(0, pinfo['score'] + gained_score)
+            pinfo['score'] += gained_score  # -5pt 減点を正しく反映
 
         full_q = self.current_question.get('full_question') or self.current_question.get('question', '') if self.current_question else ''
         official_ans = self.get_official_answer()
@@ -455,7 +446,7 @@ class GameManager:
         
         pinfo['combo'] = 0
         gained_score = SCORE_INCORRECT
-        pinfo['score'] = max(0, pinfo['score'] + gained_score)
+        pinfo['score'] += gained_score  # タイムアウト時にも正しく -5pt 減点
 
         entered_text = ""
         if player_id in self.mhy_progress:

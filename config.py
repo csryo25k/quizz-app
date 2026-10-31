@@ -1,11 +1,15 @@
 import os
 
-# ディレクトリパス設定（Render・ローカル両対応）
+# ディレクトリパス設定（Render・ローカル・各種配置フォールバック対応）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 QUESTIONS_FILE = os.path.join(BASE_DIR, "questions", "question.xlsx")
 if not os.path.exists(QUESTIONS_FILE):
-    # ルート直下にquestionsがある場合のフォールバック
+    QUESTIONS_FILE = os.path.join(BASE_DIR, "question.xlsx")
+if not os.path.exists(QUESTIONS_FILE):
     QUESTIONS_FILE = os.path.join(os.path.dirname(BASE_DIR), "questions", "question.xlsx")
+if not os.path.exists(QUESTIONS_FILE):
+    QUESTIONS_FILE = os.path.join(os.path.dirname(BASE_DIR), "question.xlsx")
 
 # 得点仕様
 SCORE_CORRECT = 10

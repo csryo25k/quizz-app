@@ -22,14 +22,14 @@ def katakana_to_hiragana(text: str) -> str:
 def normalize_text(text: str) -> str:
     """
     Unicode正規化(NFKC)、小文字化、カタカナ->ひらがな変換、
-    記号・スペース除去を行う
+    記号・スペース除去を行う（「々」などの踊り字やカタカナ範囲も保護）
     """
     if not text:
         return ""
     text = unicodedata.normalize("NFKC", str(text))
     text = text.lower()
     text = katakana_to_hiragana(text)
-    text = re.sub(r"[^\w\u3040-\u309f\u4e00-\u9faf\u30fc]", "", text)
+    text = re.sub(r"[^\w\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\u30fc\u3005]", "", text)
     return text
 
 def check_answer(user_answer: str, correct_answers) -> bool:

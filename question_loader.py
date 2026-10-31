@@ -19,23 +19,23 @@ def parse_choice_answer_index(cell_val, choices):
         if match:
             val_str = match.group(1)
 
-    val_upper = val_str.upper()
-    
-    col_map = {
-        "C": 0, "D": 1, "E": 2, "F": 3,
-        "C列": 0, "D列": 1, "E列": 2, "F列": 3,
-        "1": 0, "2": 1, "3": 2, "4": 3,
-        "0": 0
-    }
-    if val_upper in col_map:
-        return col_map[val_upper]
-    
-    if len(val_upper) >= 2 and val_upper[0] in col_map:
-        return col_map[val_upper[0]]
-        
+    # 【最優先】選択肢テキストとの完全一致をチェック（「1930年代」などの数字を含むテキストの誤判定防止）
     for idx, c in enumerate(choices):
         if str(c).strip().lower() == val_str.lower():
             return idx
+
+    val_upper = val_str.upper()
+    
+    # 完全に列名や単一数字としてマッチする場合のみインデックスマップを使用
+    exact_col_map = {
+        "C": 0, "D": 1, "E": 2, "F": 3,
+        "C列": 0, "D列": 1, "E列": 2, "F列": 3,
+        "1": 0, "2": 1, "3": 2, "4": 3,
+        "1列": 0, "2列": 1, "3列": 2, "4列": 3,
+        "0": 0
+    }
+    if val_upper in exact_col_map:
+        return exact_col_map[val_upper]
             
     return 0
 
@@ -63,7 +63,6 @@ def get_cell_value_smart(ws_data, ws_formula, row_idx, col_idx):
             col_letter = match_cell.group(1)
             target_row = int(match_cell.group(2))
             target_col = column_index_from_string(col_letter)
-            # 参照先セルの値を取得
             target_val = ws_data.cell(row=target_row, column=target_col).value
             if target_val is None:
                 target_val = ws_formula.cell(row=target_row, column=target_col).value
@@ -82,7 +81,6 @@ def load_questions(filepath: str, difficulty: str = "all") -> list:
         return []
 
     try:
-        # 計算結果用と数式解析用の2つのモードでワークブックを開く
         wb_data = openpyxl.load_workbook(filepath, data_only=True)
         wb_formula = openpyxl.load_workbook(filepath, data_only=False)
     except Exception as e:
@@ -117,7 +115,13 @@ def load_questions(filepath: str, difficulty: str = "all") -> list:
 
             q_type_val = ws_data.cell(row=row_idx, column=2).value  # B列
             q_type = str(q_type_val).strip().lower() if q_type_val is not None else "text"
-            if q_type not in ("mhy", "choice", "text"):
+            
+            # タイプ指定のタイポ補正
+            if q_type in ("chioce", "choices", "4択", "選択"):
+                q_type = "choice"
+            elif q_type in ("mhy", "文字選択"):
+                q_type = "mhy"
+            elif q_type not in ("mhy", "choice", "text"):
                 q_type = "text"
 
             item = {
@@ -129,12 +133,10 @@ def load_questions(filepath: str, difficulty: str = "all") -> list:
             }
             global_id += 1
 
-            # I列(9) -> H列(8) の順で優先読み込み
-            ans_cell_val = get_cell_value_smart(ws_data, ws_formula, row_idx, 9)
+            # H列(8: 模範解答) を最優先読み込み（I列(9: 解説)に惑わされないように修正）
+            ans_cell_val = get_cell_value_smart(ws_data, ws_formula, row_idx, 8)
             if ans_cell_val is None or str(ans_cell_val).strip() == "":
-                ans_cell_val = get_cell_value_smart(ws_data, ws_formula, row_idx, 8)
-
-            print(f"[DEBUG] シート:{sheet_name} 行:{row_idx} | 最終判定正解値: {ans_cell_val}")
+                ans_cell_val = get_cell_value_smart(ws_data, ws_formula, row_idx, 9)
 
             if q_type == "choice":
                 choices = []

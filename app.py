@@ -330,8 +330,10 @@ def schedule_auto_advance():
     if finish_after_current_q:
         auto_advance_active = False
         finish_after_current_q = False
-        eventlet.sleep(3.0)
-        send_quiz_finished()
+        def delayed_finish():
+            eventlet.sleep(3.0)
+            send_quiz_finished()
+        eventlet.spawn(delayed_finish)
         return
 
     if not auto_advance_active:
@@ -563,7 +565,7 @@ def send_quiz_finished():
         rankings.append({
             'player_id': pid,
             'name': pdata.get('name', 'ゲスト'),
-            'score': max(0, pdata.get('score', 0)),
+            'score': pdata.get('score', 0),
             'combo': pdata.get('combo', 0)
         })
 

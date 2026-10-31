@@ -292,7 +292,7 @@ socket.on("mhy_next_step", (data) => {
     if (enteredEl) enteredEl.innerText = data.entered;
     
     currentStepId = data.step_id;
-    startAnswerTimer(data.limit || 3.0);
+    startAnswerTimer(data.limit || 6.0);
     renderMhyStepChoices(data.choices);
 });
 
